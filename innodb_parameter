@@ -1,0 +1,12 @@
+| Parameter                           | Purpose                   | Example    | Recommended For               |
+| ----------------------------------- | ------------------------- | ---------- | ----------------------------- |
+| innodb_buffer_pool_size          | Data cache                | `16G`      | Large datasets, OLTP          |
+| innodb_log_file_size             | Redo log file size        | `1G`       | Write-heavy apps              |
+| innodb_flush_log_at_trx_commit | Durability vs performance | `1`        | `1` for prod, `2` for speed   |
+| innodb_file_per_table            | Table file isolation      | `1`        | Always recommended            |
+| innodb_flush_method               | Flush style               | `O_DIRECT` | Avoid double buffering        |
+| innodb_io_capacity                | Disk IOPS control         | `2000`     | SSD/NVMe                      |
+| innodb_read_io_threads           | Read threads              | `8`        | Multi-core servers            |
+| innodb_write_io_threads          | Write threads             | `8`        | High I/O                      |
+| innodb_log_buffer_size           | Redo log memory buffer    | `64M`      | Batch inserts                 |
+| innodb_thread_concurrency         | InnoDB thread concurrency | `16`       | Older versions or fine tuning |
