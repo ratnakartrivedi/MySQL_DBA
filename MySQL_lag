@@ -1,1 +1,58 @@
+🔹 1. sync_binlog (for Binary Log Durability)
 
+Definition:
+This controls how often MySQL synchronizes the binary log file to disk (i.e., an fsync() is called).
+Value	Meaning
+0	OS handles flushing (fastest, but data may be lost in a crash).
+1 (default)	MySQL calls fsync() after each transaction — fully durable.
+>1	MySQL calls fsync() every N transactions — less durable, faster.
+
+Example:
+
+-- Set to fully durable
+SET GLOBAL sync_binlog = 1;
+
+-- For better performance but reduced durability
+SET GLOBAL sync_binlog = 100;
+
+Recommendation:
+
+    Use 1 for critical production systems (no binary log loss in crash).
+
+    Use 100 or more in replication slaves or non-critical systems to boost performance.
+
+🔹 2. innodb_flush_log_at_trx_commit (for InnoDB Log Durability)
+
+Definition:
+Controls when the InnoDB redo log is flushed to disk.
+Value	Meaning
+0	Write and flush logs once per second. Fast, but can lose last 1s of transactions on crash.
+1	(default) Write and flush logs to disk at every commit. Most durable.
+2	Write at commit, but flush once per second. Balanced option.
+
+Example:
+
+-- Set to fully durable
+SET GLOBAL innodb_flush_log_at_trx_commit = 1;
+
+-- For performance, accepting potential loss of last second's transactions
+SET GLOBAL innodb_flush_log_at_trx_commit = 2;
+
+Recommendation:
+
+    Use 1 for durability-critical production systems.
+
+    Use 2 for performance-critical systems where some data loss is acceptable.
+
+✅ Safe Performance Tuning Combo (Example)
+
+SET GLOBAL sync_binlog = 100;
+SET GLOBAL innodb_flush_log_at_trx_commit = 2;
+
+This combo improves performance significantly, but at the cost of losing up to:
+
+    Last 100 transactions in binary logs (in crash).
+
+    Last 1 second of InnoDB transactions.
+
+Let me know if you want these added to your my.cnf or need advice based on your environment (e.g., replication, Aurora, write load).
