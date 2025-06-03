@@ -1,1 +1,46 @@
+Step	Action	InnoDB Component	Explanation
+1	Query received	SQL Parser	The MySQL SQL layer parses the UPDATE query to understand syntax and structure.
+2	Transaction begins	Transaction System	A new transaction is started (implicitly or explicitly), tracked via TRX structure in InnoDB.
+3	Row lock acquired	Lock Manager	InnoDB uses row-level locking (shared/exclusive) to ensure ACID isolation during the update.
+4	Page loaded to memory	Buffer Pool	If the target row’s page is not already in memory, it is read from disk into the Buffer Pool.
+5	Modify in memory	Buffer Pool	The change is applied in-memory to the page → page becomes a dirty page (modified but not yet flushed).
+6	Write redo log	Log Buffer	InnoDB writes the change to the redo log (ib_logfile) stored in memory (log buffer).
+7	Flush (based on setting)	Log Writer	Depending on innodb_flush_log_at_trx_commit:
+
+    1 = write and flush log at commit
+
+    2 = write log, flush later
+
+    0 = flush and write delayed |
+    | 8 | Commit transaction | Transaction System | Transaction commits; binlog is written (if enabled), and locks released. |
+    | 9 | Page remains dirty | Buffer Pool | Data page in memory is still dirty; InnoDB waits for background threads to flush it. |
+    | 10 | Undo log retained | Undo Segment | Undo log is kept (for rollback, MVCC, or crash recovery); only cleaned up later by purge threads. |
+    | 11 | Background flushing | Checkpointer & IO Threads | Background processes (e.g., Page Cleaner Thread) flush dirty pages from memory to disk. |
+    | 12 | Recovery if crash | Redo & Undo Logs | In case of a crash, InnoDB uses the redo log to redo committed changes and undo log to rollback incomplete transactions. |
+
+🔄 InnoDB Key Internals Explained
+
+    Redo Logs: Ensure durability — all committed changes can be replayed.
+
+    Undo Logs: Ensure atomicity & consistency — used for rollback and consistent reads (MVCC).
+
+    Buffer Pool: Acts like a cache + working memory for pages being modified or read.
+
+    Row Locks: Ensure isolation between concurrent updates.
+
+    Checkpointer: Ensures data and logs are safely flushed to disk over time.
+
+💡 Real-world Example
+
+START TRANSACTION;
+UPDATE employees SET salary = 100000 WHERE emp_id = 101;
+COMMIT;
+
+    This triggers all 12 steps above.
+
+    Behavior is influenced by:
+
+        innodb_flush_log_at_trx_commit = 1 → flush redo on commit
+
+        sync_binlog = 1 → sync binlog to disk on commit
 
