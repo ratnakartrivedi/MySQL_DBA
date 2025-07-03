@@ -101,3 +101,11 @@ Monitoring and Troubleshooting
 4. Crash Recovery:
    - Redo logs and doublewrite buffers ensure that committed transactions are recovered after crashes.
    - Test crash recovery procedures in a staging environment to validate configurations.
+
+ALter
+
+5. innodb_online_alter_log_max_size
+
+    Relevant for online DDL operations (e.g., ALTER TABLE ... ALGORITHM=INPLACE).
+
+    Specifies the size limit for the DDL log used to track changes during online operations.
